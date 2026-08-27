@@ -1,0 +1,737 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="JuniLabs studies complex biological systems to help turn understanding into practical progress.">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#080705">
+  <title>JuniLabs — Biology, understood as a system</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-synthesis: none;
+      --ease: cubic-bezier(.22, 1, .36, 1);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { min-height: 100%; }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      overflow: hidden;
+      background: #080705;
+      color: #f5f0e6;
+      transition: background-color .8s var(--ease), color .8s var(--ease);
+    }
+
+    button, a { font: inherit; }
+
+    button:focus-visible,
+    a:focus-visible {
+      outline: 2px solid currentColor;
+      outline-offset: 4px;
+    }
+
+    .site-shell {
+      position: relative;
+      min-height: 100svh;
+      isolation: isolate;
+    }
+
+    .topbar {
+      position: fixed;
+      z-index: 20;
+      top: 0;
+      left: 0;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 2rem;
+      padding: 26px 34px;
+      color: var(--chrome, #f5f0e6);
+      transition: color .7s var(--ease);
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      justify-self: start;
+      gap: 10px;
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .brand-mark {
+      position: relative;
+      width: 33px;
+      height: 33px;
+      flex: 0 0 auto;
+    }
+
+    .brand-mark img {
+      position: absolute;
+      inset: -7px;
+      width: 47px;
+      height: 47px;
+      object-fit: contain;
+      opacity: 0;
+      transform: scale(.82) rotate(-8deg);
+      transition: opacity .45s ease, transform .8s var(--ease);
+    }
+
+    body[data-theme="origin"] .mark-origin,
+    body[data-theme="atlas"] .mark-atlas,
+    body[data-theme="terrain"] .mark-terrain {
+      opacity: 1;
+      transform: scale(1) rotate(0);
+    }
+
+    .brand-name {
+      font-size: 16px;
+      font-weight: 620;
+      letter-spacing: -.025em;
+    }
+
+    .concept-switch {
+      display: inline-flex;
+      align-items: center;
+      justify-self: center;
+      gap: 3px;
+      padding: 4px;
+      border: 1px solid var(--switch-border, rgba(255,255,255,.16));
+      border-radius: 999px;
+      background: var(--switch-bg, rgba(10,10,10,.3));
+      box-shadow: 0 12px 40px rgba(0,0,0,.08);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      transition: background .7s var(--ease), border-color .7s var(--ease);
+    }
+
+    .concept-switch button {
+      position: relative;
+      min-width: 39px;
+      height: 34px;
+      padding: 0 12px;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      opacity: .54;
+      transition: opacity .25s ease, color .4s ease, background-color .4s ease, transform .25s ease;
+    }
+
+    .concept-switch button:hover { opacity: .9; }
+
+    .concept-switch button[aria-pressed="true"] {
+      color: var(--active-ink, #17120b);
+      background: var(--active-bg, #f5f0e6);
+      opacity: 1;
+    }
+
+    .status {
+      justify-self: end;
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+    }
+
+    .status-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--accent, #e7a43c);
+      box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent, #e7a43c) 55%, transparent);
+      animation: signal 2.7s ease-out infinite;
+    }
+
+    @keyframes signal {
+      0%, 26% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 45%, transparent); }
+      70%, 100% { box-shadow: 0 0 0 9px transparent; }
+    }
+
+    main { min-height: 100svh; }
+
+    .scene {
+      position: absolute;
+      z-index: 1;
+      inset: 0;
+      display: grid;
+      min-height: 100svh;
+      overflow: hidden;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity .7s ease, visibility 0s linear .7s;
+    }
+
+    .scene.is-active {
+      z-index: 2;
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transition-delay: 0s;
+    }
+
+    .scene-bg,
+    .scene-wash,
+    .scene-grain {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .scene-bg {
+      z-index: -3;
+      background-position: center;
+      background-size: cover;
+      transform: scale(1.035) translate3d(var(--parallax-x, 0), var(--parallax-y, 0), 0);
+      transition: transform 1.4s var(--ease);
+    }
+
+    .is-active .scene-bg { transform: scale(1) translate3d(var(--parallax-x, 0), var(--parallax-y, 0), 0); }
+
+    .scene-wash { z-index: -2; }
+
+    .scene-grain {
+      z-index: 3;
+      opacity: .17;
+      mix-blend-mode: soft-light;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.95' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.3'/%3E%3C/svg%3E");
+    }
+
+    .scene-content {
+      position: relative;
+      z-index: 4;
+    }
+
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 0 0 21px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .22em;
+      line-height: 1.4;
+      text-transform: uppercase;
+      opacity: .72;
+    }
+
+    .eyebrow::before {
+      width: 27px;
+      height: 1px;
+      background: currentColor;
+      content: "";
+      opacity: .65;
+    }
+
+    h1 {
+      max-width: 800px;
+      margin: 0;
+      font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+      font-size: clamp(50px, 7.4vw, 116px);
+      font-weight: 400;
+      letter-spacing: -.062em;
+      line-height: .91;
+      text-wrap: balance;
+    }
+
+    .lede {
+      max-width: 480px;
+      margin: 27px 0 0;
+      font-size: clamp(15px, 1.35vw, 19px);
+      font-weight: 400;
+      letter-spacing: -.014em;
+      line-height: 1.55;
+      text-wrap: pretty;
+      opacity: .76;
+    }
+
+    .scene.is-active .eyebrow,
+    .scene.is-active h1,
+    .scene.is-active .lede,
+    .scene.is-active .scene-meta {
+      animation: rise .95s var(--ease) both;
+    }
+
+    .scene.is-active h1 { animation-delay: .05s; }
+    .scene.is-active .lede { animation-delay: .11s; }
+    .scene.is-active .scene-meta { animation-delay: .18s; }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(24px); }
+    }
+
+    .scene-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 38px;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: .18em;
+      line-height: 1.4;
+      text-transform: uppercase;
+      opacity: .58;
+    }
+
+    .meta-separator {
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: currentColor;
+      opacity: .75;
+    }
+
+    /* 01 — Origin */
+    .scene-origin { color: #f6f0e4; }
+
+    .scene-origin .scene-bg {
+      background-image: url("assets/origin-bg.jpg");
+      background-position: center;
+    }
+
+    .scene-origin .scene-wash {
+      background: linear-gradient(90deg, rgba(4,4,3,.3) 0%, transparent 55%), linear-gradient(0deg, rgba(3,3,2,.4), transparent 36%);
+    }
+
+    .scene-origin .scene-content {
+      align-self: end;
+      max-width: 830px;
+      padding: 0 6.5vw 8.5vh;
+    }
+
+    .scene-origin h1 em {
+      color: #efb04c;
+      font-weight: inherit;
+      font-style: italic;
+    }
+
+    .origin-coordinate {
+      position: absolute;
+      right: 34px;
+      bottom: 30px;
+      display: grid;
+      grid-template-columns: auto auto;
+      gap: 4px 14px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 8px;
+      letter-spacing: .13em;
+      line-height: 1.45;
+      text-transform: uppercase;
+      opacity: .45;
+    }
+
+    .origin-coordinate span:nth-child(odd) { opacity: .58; }
+
+    /* 02 — Atlas */
+    .scene-atlas { color: #071b43; }
+
+    .scene-atlas .scene-bg {
+      background-image: url("assets/atlas-bg.jpg");
+      background-position: center;
+    }
+
+    .scene-atlas .scene-wash {
+      background: linear-gradient(90deg, transparent 22%, rgba(248,251,252,.18) 47%, rgba(249,251,252,.34) 100%);
+    }
+
+    .scene-atlas::after {
+      position: absolute;
+      z-index: 2;
+      top: 14%;
+      right: 5.6vw;
+      bottom: 12%;
+      width: 1px;
+      background: rgba(7,27,67,.16);
+      content: "";
+    }
+
+    .scene-atlas .scene-content {
+      align-self: center;
+      justify-self: end;
+      width: min(690px, 49vw);
+      padding: 7vh 8vw 0 3vw;
+    }
+
+    .scene-atlas h1 {
+      max-width: 650px;
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: clamp(52px, 6.7vw, 106px);
+      font-weight: 310;
+      letter-spacing: -.072em;
+      line-height: .91;
+    }
+
+    .scene-atlas h1 strong {
+      color: #008fb6;
+      font-weight: 670;
+    }
+
+    .atlas-index {
+      position: absolute;
+      z-index: 4;
+      left: 34px;
+      bottom: 31px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #071b43;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 8px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      opacity: .55;
+    }
+
+    .atlas-index::before {
+      width: 34px;
+      height: 1px;
+      background: currentColor;
+      content: "";
+    }
+
+    /* 03 — Terrain */
+    .scene-terrain { color: #f4efff; }
+
+    .scene-terrain .scene-bg {
+      background-image: url("assets/terrain-bg.jpg");
+      background-position: center;
+    }
+
+    .scene-terrain .scene-wash {
+      background: linear-gradient(90deg, rgba(8,9,30,.38), transparent 70%), linear-gradient(0deg, rgba(9,8,30,.34), transparent 50%);
+    }
+
+    .scene-terrain .scene-content {
+      align-self: center;
+      width: min(820px, 68vw);
+      padding: 9vh 0 0 7.8vw;
+    }
+
+    .scene-terrain h1 { max-width: 750px; }
+
+    .scene-terrain h1 em {
+      color: #ff745f;
+      font-weight: inherit;
+      font-style: normal;
+    }
+
+    .terrain-rail {
+      position: absolute;
+      z-index: 4;
+      right: 34px;
+      bottom: 31px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      opacity: .5;
+    }
+
+    .terrain-rail::after {
+      width: 54px;
+      height: 1px;
+      background: linear-gradient(90deg, currentColor 0 62%, #ff745f 62% 100%);
+      content: "";
+    }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    body[data-theme="origin"] {
+      --chrome: #f5f0e6;
+      --accent: #efb04c;
+      --active-bg: #f3ead9;
+      --active-ink: #1d1309;
+      --switch-bg: rgba(10,8,5,.34);
+      --switch-border: rgba(255,239,211,.18);
+      background: #080705;
+      color: #f5f0e6;
+    }
+
+    body[data-theme="atlas"] {
+      color-scheme: light;
+      --chrome: #071b43;
+      --accent: #00a7ca;
+      --active-bg: #071b43;
+      --active-ink: #f6fbfc;
+      --switch-bg: rgba(247,250,251,.48);
+      --switch-border: rgba(7,27,67,.14);
+      background: #eef6fa;
+      color: #071b43;
+    }
+
+    body[data-theme="terrain"] {
+      --chrome: #f4efff;
+      --accent: #ff745f;
+      --active-bg: #f4efff;
+      --active-ink: #13122b;
+      --switch-bg: rgba(13,12,39,.34);
+      --switch-border: rgba(234,225,255,.18);
+      background: #0d0c27;
+      color: #f4efff;
+    }
+
+    @media (max-width: 760px) {
+      body { overflow: auto; }
+
+      .topbar {
+        grid-template-columns: 1fr auto;
+        gap: 16px;
+        padding: 20px;
+      }
+
+      .concept-switch {
+        position: fixed;
+        top: auto;
+        right: 50%;
+        bottom: max(18px, env(safe-area-inset-bottom));
+        z-index: 30;
+        transform: translateX(50%);
+      }
+
+      .concept-switch button {
+        min-width: 48px;
+        height: 39px;
+      }
+
+      .status { font-size: 8px; }
+
+      .scene-origin .scene-bg {
+        background-position: 57% center;
+      }
+
+      .scene-origin .scene-wash {
+        background: linear-gradient(0deg, rgba(3,3,2,.87) 0%, rgba(3,3,2,.2) 70%);
+      }
+
+      .scene-origin .scene-content,
+      .scene-atlas .scene-content,
+      .scene-terrain .scene-content {
+        align-self: end;
+        justify-self: stretch;
+        width: auto;
+        max-width: none;
+        padding: 0 22px 112px;
+      }
+
+      h1,
+      .scene-atlas h1 {
+        max-width: 95%;
+        font-size: clamp(48px, 15vw, 72px);
+        line-height: .93;
+      }
+
+      .lede {
+        max-width: 92%;
+        margin-top: 22px;
+        font-size: 15px;
+      }
+
+      .scene-meta { margin-top: 27px; }
+
+      .origin-coordinate,
+      .atlas-index,
+      .terrain-rail { display: none; }
+
+      .scene-atlas .scene-bg { background-position: 30% center; }
+
+      .scene-atlas .scene-wash {
+        background: linear-gradient(0deg, rgba(246,250,252,.98) 0%, rgba(246,250,252,.48) 63%, rgba(246,250,252,.07) 100%);
+      }
+
+      .scene-atlas::after { display: none; }
+
+      .scene-terrain .scene-bg { background-position: 64% center; }
+
+      .scene-terrain .scene-wash {
+        background: linear-gradient(0deg, rgba(9,8,30,.9), rgba(9,8,30,.05) 75%);
+      }
+    }
+
+    @media (max-width: 430px) {
+      .brand-name { font-size: 15px; }
+      .status { letter-spacing: .14em; }
+      .status span:last-child { max-width: 78px; line-height: 1.25; }
+      .eyebrow { margin-bottom: 16px; font-size: 9px; }
+      .scene-meta { display: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+      }
+    }
+  </style>
+</head>
+<body data-theme="origin">
+  <div class="site-shell">
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="JuniLabs home">
+        <span class="brand-mark" aria-hidden="true">
+          <img class="mark-origin" src="assets/origin-mark.png" alt="">
+          <img class="mark-atlas" src="assets/atlas-mark.png" alt="">
+          <img class="mark-terrain" src="assets/terrain-mark.png" alt="">
+        </span>
+        <span class="brand-name">JuniLabs</span>
+      </a>
+
+      <nav class="concept-switch" aria-label="Choose a design concept">
+        <button type="button" data-target="origin" aria-pressed="true" aria-label="Show concept 1: Origin">01</button>
+        <button type="button" data-target="atlas" aria-pressed="false" aria-label="Show concept 2: Evidence Atlas">02</button>
+        <button type="button" data-target="terrain" aria-pressed="false" aria-label="Show concept 3: Living Terrain">03</button>
+      </nav>
+
+      <div class="status" aria-label="Website status: coming soon">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span>Coming soon</span>
+      </div>
+    </header>
+
+    <main>
+      <section class="scene scene-origin is-active" data-scene="origin" aria-hidden="false">
+        <div class="scene-bg" aria-hidden="true"></div>
+        <div class="scene-wash" aria-hidden="true"></div>
+        <div class="scene-grain" aria-hidden="true"></div>
+        <div class="scene-content">
+          <p class="eyebrow">Complex biology, considered whole</p>
+          <h1>Understanding begins with the <em>system.</em></h1>
+          <p class="lede">JuniLabs is building a rigorous way to turn biological complexity into useful direction.</p>
+          <div class="scene-meta" aria-hidden="true">
+            <span>Observe</span><span class="meta-separator"></span>
+            <span>Investigate</span><span class="meta-separator"></span>
+            <span>Translate</span>
+          </div>
+        </div>
+        <div class="origin-coordinate" aria-hidden="true">
+          <span>Focus</span><span>Human disease</span>
+          <span>Mode</span><span>Systems inquiry</span>
+        </div>
+      </section>
+
+      <section class="scene scene-atlas" data-scene="atlas" aria-hidden="true">
+        <div class="scene-bg" aria-hidden="true"></div>
+        <div class="scene-wash" aria-hidden="true"></div>
+        <div class="scene-grain" aria-hidden="true"></div>
+        <div class="scene-content">
+          <p class="eyebrow">Evidence / cause / consequence</p>
+          <h1>Make complexity <strong>legible.</strong></h1>
+          <p class="lede">We map signals, evidence and cause to find what matters—and what might move us forward.</p>
+          <div class="scene-meta" aria-hidden="true">
+            <span>JuniLabs</span><span class="meta-separator"></span>
+            <span>Research in formation</span>
+          </div>
+        </div>
+        <div class="atlas-index" aria-hidden="true">An atlas for difficult questions</div>
+      </section>
+
+      <section class="scene scene-terrain" data-scene="terrain" aria-hidden="true">
+        <div class="scene-bg" aria-hidden="true"></div>
+        <div class="scene-wash" aria-hidden="true"></div>
+        <div class="scene-grain" aria-hidden="true"></div>
+        <div class="scene-content">
+          <p class="eyebrow">The path is in the pattern</p>
+          <h1>Charting the <em>living unknown.</em></h1>
+          <p class="lede">JuniLabs follows complex biological systems toward clearer questions and practical possibilities.</p>
+          <div class="scene-meta" aria-hidden="true">
+            <span>First horizon</span><span class="meta-separator"></span>
+            <span>Neurodegenerative disease</span>
+          </div>
+        </div>
+        <div class="terrain-rail" aria-hidden="true">Signal through system</div>
+      </section>
+    </main>
+
+    <p class="visually-hidden" aria-live="polite" id="concept-announcement">Concept 1: Origin</p>
+  </div>
+
+  <script>
+    (() => {
+      const names = {
+        origin: "Concept 1: Origin",
+        atlas: "Concept 2: Evidence Atlas",
+        terrain: "Concept 3: Living Terrain"
+      };
+      const themeColors = {
+        origin: "#080705",
+        atlas: "#eef6fa",
+        terrain: "#0d0c27"
+      };
+      const buttons = [...document.querySelectorAll("[data-target]")];
+      const scenes = [...document.querySelectorAll("[data-scene]")];
+      const announcement = document.querySelector("#concept-announcement");
+      const themeMeta = document.querySelector('meta[name="theme-color"]');
+      const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+      function activate(theme, announce = true) {
+        if (!names[theme]) return;
+        document.body.dataset.theme = theme;
+        themeMeta.setAttribute("content", themeColors[theme]);
+
+        buttons.forEach((button) => {
+          button.setAttribute("aria-pressed", String(button.dataset.target === theme));
+        });
+
+        scenes.forEach((scene) => {
+          const active = scene.dataset.scene === theme;
+          scene.classList.toggle("is-active", active);
+          scene.setAttribute("aria-hidden", String(!active));
+        });
+
+        if (announce) announcement.textContent = names[theme];
+      }
+
+      buttons.forEach((button, index) => {
+        button.addEventListener("click", () => activate(button.dataset.target));
+        button.addEventListener("keydown", (event) => {
+          if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+          event.preventDefault();
+          const direction = event.key === "ArrowRight" ? 1 : -1;
+          const next = buttons[(index + direction + buttons.length) % buttons.length];
+          next.focus();
+          activate(next.dataset.target);
+        });
+      });
+
+      window.addEventListener("pointermove", (event) => {
+        if (prefersReducedMotion.matches) return;
+        const x = ((event.clientX / window.innerWidth) - .5) * -7;
+        const y = ((event.clientY / window.innerHeight) - .5) * -5;
+        document.documentElement.style.setProperty("--parallax-x", `${x}px`);
+        document.documentElement.style.setProperty("--parallax-y", `${y}px`);
+      }, { passive: true });
+
+      activate("origin", false);
+    })();
+  </script>
+</body>
+</html>
